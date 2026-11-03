@@ -1,8 +1,9 @@
-# CLAUDE.md -- House Drive
+# CLAUDE.md -- backup-drive
 
-**House Drive** is a Google Drive lite for the machines of one home: each machine keeps a local cache
-of one shared tree, and one disk on the home LAN holds every file. It works offline and syncs when
-the store machine is on. Written in Rust, for Windows.
+`backup-drive` is an automated, local-to-local selective backup utility for Windows systems running
+Git Bash. It uses a standalone `rclone` binary to copy high-priority files (matching glob/filter
+patterns) from a Google Drive for Desktop virtual mount (e.g., `G:/My Drive`) to an external local
+hard drive (e.g., `E:/Backup`), bypassing cloud API quotas and authentication flows.
 
 ## Never leak secrets or sensitive information
 
@@ -16,10 +17,10 @@ service:
 - **Personal or household information:** schedules, habits, travel, when a home is empty or a
   machine is off, where anyone works or lives.
 
-Real values live only in each machine's own gitignored configuration; the repository holds an
-example with placeholders. Examples in code, tests and docs use generic names (`machine-a`,
-`store-machine`, `C:\example\data`). Before writing a file the developer may commit, check it for
-any of the above; when in doubt, leave it out and ask. A leak already committed cannot be fixed by a
+Real values live only in the gitignored `config.env`; the repository holds `config.env.example`
+with placeholders. Examples in code, tests and docs use generic names (`G:/My Drive`,
+`E:/Backup`, `C:\example\data`). Before writing a file the developer may commit, check it for any
+of the above; when in doubt, leave it out and ask. A leak already committed cannot be fixed by a
 later commit: say so at once, so the developer can rewrite history and rotate the secret.
 
 ## No autonomous writes allowed
@@ -58,39 +59,101 @@ Put each command in its own fenced block: three consecutive commands are
 three fenced blocks, never one block holding all three. Commit messages
 must be one line only.
 
+## Repository structure
+
+```text
+backup-drive/
+├── backup.sh             # Main orchestration shell script
+├── filters.txt           # Rclone include/exclude pattern rules
+├── config.env.example    # Configuration template for local paths and options
+├── config.env            # User configuration (untracked)
+├── .gitignore            # Git exclusion rules
+├── README.md             # Project documentation and setup guide
+└── CLAUDE.md             # AI assistant guidance and project conventions
+```
+
+## Key architectural principles
+
+1. **Local-to-local operation:** No cloud API remotes or OAuth authentication keys are used.
+   `rclone` treats both the Google Drive virtual drive and the backup HDD as local filesystem
+   targets.
+2. **Deterministic filter precedence:** Rclone evaluates filter rules sequentially top-down. The
+   first rule matching a path wins. The filter file MUST terminate with `- *` to enforce selective
+   inclusion.
+3. **Idempotence and safety:**
+   - The backup uses `rclone copy` rather than `rclone sync` to prevent accidental deletions on the
+     local backup disk if files are deleted or moved on Google Drive.
+   - Timestamps and sizes are preserved. `--modify-window 2s` is used to prevent false positives
+     across FAT32/NTFS boundary quirks.
+
+## Safety first
+
+The backup disk holds the only second copy of the user's files. Nothing on it is ever deleted or
+overwritten by a newer-looking but smaller or broken source without that being an explicit,
+reviewed choice: never switch `copy` to `sync`, and never add `--delete-*` flags casually. A
+failure stops rather than guesses: a missing source mount or destination drive aborts the run
+instead of copying into the wrong place.
+
 ## Development platform: Windows only
 
-House Drive is developed, tested and run on native Windows only, not WSL, and Linux is not a
-target: no `#[cfg(not(windows))]` twin and no Linux path. The shell is **Git Bash**, never
-PowerShell or cmd: every command in a fenced block uses Bash syntax.
+backup-drive is developed, tested and run on native Windows only, not WSL, and Linux is not a
+target. The shell is **Git Bash**, never PowerShell or cmd: every command in a fenced block uses
+Bash syntax.
 
-- Rust uses the default `x86_64-pc-windows-msvc` toolchain.
-- Windows-specific code needs no `#[cfg]` pair, and no new dependency when a few lines suffice.
 - Line endings are governed by `.gitattributes`: Bash scripts always LF, Windows scripts always CRLF,
   every other text file stored LF and checked out with the OS's native endings.
 - Git Bash rewrites arguments that look like Unix paths when calling native Windows programs; prefix
   the command with `MSYS_NO_PATHCONV=1` when that bites.
-- Code that launches processes cannot rely on Bash: Rust's `Command` needs the real executable name,
-  including `.exe`.
 
-## Safety first
+### Dependencies
 
-House Drive moves and deletes other people's files. A local file is deleted only once its copy on
-the store has been verified; a path read from the index or the store is checked to stay inside the
-data root; a failure stops rather than guesses. Tests cover every path that deletes.
+- Git for Windows (providing Git Bash / MSYS2 environment).
+- `rclone.exe` accessible in `$PATH`.
+- `shellcheck` (recommended for script validation).
+
+### Common commands
+
+- **Lint Bash scripts:**
+  ```bash
+  shellcheck backup.sh
+  ```
+
+- **Dry-run verification (testing filters without copying):**
+  ```bash
+  rclone copy "$SOURCE_PATH" "$DEST_PATH" --filter-from filters.txt --dry-run
+  ```
+
+- **Run manual backup execution:**
+  ```bash
+  ./backup.sh
+  ```
+
+- **View latest log output:**
+  ```bash
+  tail -n 50 "$DEST_PATH/_logs/backup_$(date +'%Y%m%d').log"
+  ```
+
+## Coding and script conventions
+
+- **Shell standard:** Write scripts targeting `bash` (Git Bash on Windows).
+- **Strict mode:** Always enforce `set -euo pipefail` at the start of bash scripts.
+- **Path compatibility:**
+  - Prefer forward-slash absolute paths for Windows drives (e.g., `G:/My Drive`, `E:/Backup`).
+    These work cleanly across both Git Bash and the native `rclone.exe` binary.
+  - Quote all path variables to handle spaces in folder names.
+- **Environment separation:** Never commit hardcoded machine-specific drive letters or paths to
+  version control. Load path parameters exclusively through `config.env`.
+- **Rclone filter syntax:**
+  - Prefix includes with `+ ` and excludes with `- `.
+  - Prefix directory-recursive rules with `**/` (e.g., `+ **/*.kdbx`).
+  - Keep exclusion of OS junk (`Thumbs.db`, `.DS_Store`, `$RECYCLE.BIN`, `.git`) explicit before
+    the final catch-all exclude (`- *`).
 
 ## Licensing
 
-House Drive is AGPLv3 only (`LICENSE`, `AGPL-3.0-only`).
+backup-drive is AGPLv3 only (`LICENSE`, `AGPL-3.0-only`).
 
 ## No em dashes
 
 Never write em dashes or en dashes to any file in this repository, Markdown or otherwise. Write a
 double hyphen (--) instead. Ordinary hyphens (-) are fine.
-
-## Explicit `return` in Rust
-
-Functions that return a value (`-> T`) use an explicit `return <expr>;` instead of an
-implicit tail expression. `()`-returning functions need no `return`. `if`/`match` elsewhere
-in a function body (e.g. assigned to a `let`) are unaffected -- this only governs a
-function's own tail position.
