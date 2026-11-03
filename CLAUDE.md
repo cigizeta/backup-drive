@@ -150,7 +150,9 @@ Bash syntax.
   version control. Load path parameters exclusively through `config.env`.
 - **Rclone filter syntax:**
   - Prefix includes with `+ ` and excludes with `- `.
-  - Prefix directory-recursive rules with `**/` (e.g., `+ **/*.kdbx`).
+  - A rule without a leading `/` already matches at any depth, the top folder included (e.g.,
+    `+ *.kdbx`). Never prefix it with `**/`: that requires at least one parent folder, so
+    top-level files are silently skipped.
   - Keep exclusion of OS junk (`Thumbs.db`, `.DS_Store`, `$RECYCLE.BIN`, `.git`) explicit before
     the final catch-all exclude (`- *`).
 

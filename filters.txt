@@ -1,20 +1,22 @@
 # rclone filter rules for backup.sh. Evaluated top-down; the first matching rule wins.
 # "+ " includes, "- " excludes. Edit the includes to match what you want backed up.
+# A rule without a leading "/" matches at any depth, the top folder included; do not prefix it
+# with "**/", which requires at least one parent folder and so skips top-level files.
 
 # OS and tool junk, excluded before any include can match it.
-- **/Thumbs.db
-- **/desktop.ini
-- **/.DS_Store
-- **/$RECYCLE.BIN/**
-- **/.git/**
+- Thumbs.db
+- desktop.ini
+- .DS_Store
+- $RECYCLE.BIN/**
+- .git/**
 
 # High-priority files (examples).
-+ **/*.kdbx
-+ **/*.pdf
-+ **/*.docx
-+ **/*.xlsx
-+ **/*.odt
-+ **/*.ods
++ *.kdbx
++ *.pdf
++ *.docx
++ *.xlsx
++ *.odt
++ *.ods
 
 # Everything else is left out. Must stay the last rule.
 - *
