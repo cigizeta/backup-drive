@@ -17,5 +17,3 @@ Loose, running list of outstanding action items -- not full designs (those live 
     `_versions/<timestamp>/`); missing-marker failure; `./schedule.sh install`, `status`, a run
     with `schtasks.exe /Run /TN backup-drive`, `remove`, then `install` for real.
   - Then move rewrite-plan.md to `done/`.
-- **Git history:** the House Drive docs in history describe the developer's machines and when one
-  is on; whether to rewrite history is open.

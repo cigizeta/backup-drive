@@ -99,8 +99,7 @@ PDFs) as examples to edit, then the explicit junk excludes (`Thumbs.db`, `.DS_St
   from `current/` or `_versions/`, and pruning `_versions/` by hand.
 - `CLAUDE.md`: add `schedule.sh` to the repository structure; describe `current/`, `_versions/`
   and the marker under the architectural principles.
-- `claude/`: move `design.md` and `phase-1-plan.md` to `archived/` with a "superseded, see
-  rewrite-plan.md" note; rewrite `TODO.md` around this plan.
+- `claude/`: retire the House Drive docs; rewrite `TODO.md` around this plan.
 
 ## Removals (by the developer; Claude has no Bash or Git)
 
@@ -115,8 +114,3 @@ PDFs) as examples to edit, then the explicit junk excludes (`Thumbs.db`, `.DS_St
 4. A real run, then a file changed on Drive and a second run: the new version in `current/`, the
    old one in `_versions/<timestamp>/`.
 5. `./schedule.sh install`, `status`, a run triggered with `schtasks.exe /Run`, then `remove`.
-
-## Open
-
-- History: the House Drive docs in Git history describe the developer's machines and when one is
-  on. Archiving does not remove them; whether to rewrite history is the developer's call.
