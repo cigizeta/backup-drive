@@ -1,5 +1,7 @@
 # House Drive: design
 
+**Superseded, see rewrite-plan.md:** House Drive was replaced by the rclone selective backup.
+
 Design in progress, nothing implemented. Started 2026-10-18.
 
 **In one paragraph:** a few machines in one home, each with a local cache of one shared tree whose

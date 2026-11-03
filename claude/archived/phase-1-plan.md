@@ -1,5 +1,7 @@
 # Phase 1: the core and the command-line tool
 
+**Superseded, see rewrite-plan.md:** House Drive was replaced by the rclone selective backup.
+
 Implementation plan, drafted 2026-10-18 for review. Implements design.md's phase 1: everything but
 the tray icon and the Explorer integration, which build on it later. Nothing implemented yet.
 

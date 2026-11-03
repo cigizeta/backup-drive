@@ -64,6 +64,7 @@ must be one line only.
 ```text
 backup-drive/
 ├── backup.sh             # Main orchestration shell script
+├── schedule.sh           # Registers/removes the daily Task Scheduler task
 ├── filters.txt           # Rclone include/exclude pattern rules
 ├── config.env.example    # Configuration template for local paths and options
 ├── config.env            # User configuration (untracked)
@@ -85,6 +86,10 @@ backup-drive/
      local backup disk if files are deleted or moved on Google Drive.
    - Timestamps and sizes are preserved. `--modify-window 2s` is used to prevent false positives
      across FAT32/NTFS boundary quirks.
+4. **Layout on the backup disk:** files land in `DEST_PATH/current/`; a file replaced by a later
+   run is first moved to `DEST_PATH/_versions/<timestamp>/` (`--backup-dir`); logs go to
+   `DEST_PATH/_logs/`. `backup.sh` refuses to run unless the marker `DEST_PATH/.backup-drive`
+   exists, so another disk given the same drive letter is never written to.
 
 ## Safety first
 
